@@ -1,0 +1,228 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+# Classification of Urinary Biomarkers in Pancreatic Cancer: Data Description
+
+### By: Kabir Chauhan (501182498)
+
+
+## I) Data Preparation
+
+```{r}
+#set the working directory and open the dataset
+
+setwd("C:/Users/Kabir Chauhan/Desktop")
+pdac <- read.csv("Debernardi et al 2020 data.csv", header=TRUE, stringsAsFactors=TRUE, na.strings=c("", "NA"))
+
+```
+
+```{r}
+#summary of the data 
+
+head(pdac)
+tail(pdac)
+summary(pdac)
+str(pdac)
+
+```
+
+```{r}
+#summary statistics for the urinary biomarkers
+
+mode_function <- function(x) {
+  u <- na.omit(unique(x))
+  tab <- tabulate(match(x, u))
+  u[tab == max(tab)]
+}
+
+sd(pdac$age)
+IQR(pdac$age)
+mode_function((pdac$age))
+
+
+sd(pdac$plasma_CA19_9, na.rm = TRUE)
+IQR(pdac$plasma_CA19_9, na.rm = TRUE)
+mode_function((pdac$plasma_CA19_9))
+
+sd(pdac$creatinine)
+IQR(pdac$creatinine)
+mode_function((pdac$creatinine))
+
+
+sd(pdac$LYVE1)
+IQR(pdac$LYVE1)
+mode_function((pdac$LYVE1))
+
+sd(pdac$REG1B)
+IQR(pdac$REG1B)
+mode_function((pdac$REG1B))
+
+sd(pdac$TFF1)
+IQR(pdac$TFF1)
+mode_function((pdac$TFF1))
+
+sd(pdac$REG1A, na.rm = TRUE)
+IQR(pdac$REG1A, na.rm = TRUE)
+mode_function((pdac$REG1A))
+
+```
+
+
+```{r}
+#checking for NA values in the dataframe
+
+na_count <-sapply(pdac, function(y) sum(length(which(is.na(y)))))
+na_count <- data.frame(na_count)
+na_count
+
+```
+
+```{r}
+with(pdac_subset, boxplot(CREAT, LYVE1, main = "Distribution of Urinary Biomarkers", ylab = "Values",  names = c("Creatinine", "LYVE1"), col=rainbow(5), outcol=rainbow(5), pch=20, outline= FALSE))
+
+```
+
+```{r}
+#removing unwanted variables and renaming columns
+
+pdac_subset <- pdac[, -c(1:3, 7, 8)]
+colnames(pdac_subset)[3:5] <- c("dx", "CA19", "CREAT")
+
+head(pdac_subset)
+
+```
+
+```{r}
+#replace the missing values in the subset dataframe
+
+pdac_subset$CA19[is.na(pdac_subset$CA19)] <- mean(pdac_subset$CA19[!is.na(pdac_subset$CA19)])
+
+pdac_subset$REG1A[is.na(pdac_subset$REG1A)] <- mean(pdac_subset$REG1A[!is.na(pdac_subset$REG1A)])
+
+na_count <-sapply(pdac_subset, function(y) sum(length(which(is.na(y)))))
+na_count <- data.frame(na_count)
+na_count
+
+```
+```{r}
+#re-summarize the data
+
+summary(pdac_subset)
+        
+```
+
+```{r}
+cat("The IQR for CA19 is:", IQR(pdac_subset$CA19), "\n")
+cat("The IQR for CREAT is:", IQR(pdac_subset$CREAT), "\n")
+cat("The IQR for LYVE1 is:", IQR(pdac_subset$LYVE1), "\n")
+cat("The IQR for REG1B is:", IQR(pdac_subset$REG1B), "\n")
+cat("The IQR for TFF1 is:", IQR(pdac_subset$TFF1), "\n")
+cat("The IQR for REG1A is:", IQR(pdac_subset$REG1A), "\n")
+
+```
+
+```{r}
+#generate a boxplot of the distribution of urinary biomarkers
+
+with(pdac_subset, boxplot(CREAT, LYVE1, main = "Distribution of Urinary Biomarkers", ylab = "Values",  names = c("Creatinine", "LYVE1"), col=c("red", "yellow"), outcol=rainbow(5), pch=20, outline = FALSE))
+
+with(pdac_subset, boxplot(REG1B, main = "Distribution of Urinary Biomarkers", xlab = "REG1B", ylab = "Values", col="blue", outcol="blue", pch=20, outline = FALSE))
+
+with(pdac_subset, boxplot(CA19, TFF1, REG1A, main = "Distribution of Urinary Biomarkers", ylab = "Values",  names = c("CA19", "TFF1", "REG1A"), col=c("orange", "purple", "green"), outcol=c("orange", "purple", "green"), pch=20, outline= FALSE))
+
+
+```
+## II) Exploratory Data Analysis: Univariate Analysis
+
+```{r}
+#patient count by gender
+
+table(pdac_subset$sex)
+
+table1 <- table(pdac_subset$dx)
+table1
+
+```
+
+```{r}
+#distribution of patient age
+h <- hist(pdac_subset$age, main = "Distribution of Patient Age", xlab = "Age", col = rainbow(70), , breaks = 50) 
+
+xfit <- seq(min(pdac_subset$age), max(pdac_subset$age), length = 40) 
+yfit <- dnorm(xfit, mean = mean(pdac_subset$age), sd = sd(pdac_subset$age)) 
+yfit <- yfit * diff(h$mids[1:2]) * length(pdac_subset$age) 
+
+lines(xfit, yfit, col = "black", lwd = 2)
+
+```
+
+```{r}
+#d <- density(pdac_subset$age)
+#dx <- diff(d$x)[1] 
+
+#h <- hist(pdac_subset$age, main = "Distribution of Patient Age", xlab = "Age", col = rainbow(70), ylim = c(0, 25), xlim = c(20, 90), breaks = 50)
+
+
+#xfit <- seq(min(pdac_subset$age), max(pdac_subset$age), length = 40) 
+#yfit <- dnorm(xfit, mean = mean(pdac_subset$age), sd = sd(pdac_subset$age)) 
+#yfit <- yfit * diff(h$mids[1:2]) * length(pdac_subset$age) 
+#lines(xfit, yfit, col = "black", lwd = 2)
+#lines(x=d$x,y=max(h$counts)*d$y/dx)
+
+require(openintro)
+require(lattice)
+
+barchart(table1, horizontal = FALSE, main = "Distribution of Target Variable: dx", ylab = "Frequency", xlab = c("Control", "Benign", "PDAC+"),col=rainbow(3))
+
+```
+
+```{r}
+#normalization of the data set
+
+normalizedpdac <- function(x) 
+{return ((x - min(x)) / (max(x) - min(x)))}
+
+pdac_subset2 <- as.data.frame(sapply(pdac_subset[4:9], normalizedpdac))
+
+pdac_subset2$dx <- pdac_subset$dx
+
+```
+
+```{r}
+#generate a boxplot of the distribution of urinary biomarkers
+
+with(pdac_subset2, boxplot(CA19, CREAT, LYVE1, REG1B, TFF1, REG1A, main = "Distribution of Urinary Biomarkers", xlab = "Variables", ylab = "Values",  names = c("CA19", "Creatinine", "LYVE1", "REG1B", "TFF1", "REG1A"), col=rainbow(6), outcol=rainbow(6), pch=20))
+```
+
+```{r}
+#boxplot with outliers removed
+
+with(pdac_subset2, boxplot(CA19, CREAT, LYVE1, REG1B, TFF1, REG1A, main = "Distribution of Urinary Biomarkers", xlab = "Variables", ylab = "Values",  names = c("CA19", "Creatinine", "LYVE1", "REG1B", "TFF1", "REG1A"), col=rainbow(6), outcol=rainbow(6), pch=20, outline=FALSE))
+
+```
+
+## III) Exploratory Data Analysis: Bivariate Analysis
+
+```{r}
+#generate a correlation matrix for the biomarkers
+
+cor(pdac_subset2[1:6])
+
+```
+
+```{r}
+#generate a matrix of plots for the biomarkers
+
+plot(pdac_subset2[1:6])
+
+```
+```{r}
+#plotting a scatterplot to examine the relationships between density, pH, and the pass/fail quality of wines
+
+library(tidyverse)
+
+ggplot(pdac_subset2, aes(x = TFF1, y = LYVE1, color = dx)) + geom_jitter(width = 0.75)
+
+```
